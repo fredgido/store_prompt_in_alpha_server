@@ -24,11 +24,9 @@ def index():
 
 
 def read_info_from_image_stealth(image: PIL.Image) -> str:
-    if image.mode != "RGBA":
-        if image.text:
-            return image.text
-        else:
-            return ""
+    if 'parameters' in image.text:
+        return image.text["parameters"]
+
 
     # trying to read stealth pnginfo
     width, height = image.size

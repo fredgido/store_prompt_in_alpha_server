@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<style>
+    input[type=file] {
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        font-size: 20px;
+        margin: 20px;
+    }
+
+    input[type=submit] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+
+    label {
+        display: block;
+        margin: 20px;
+        font-size: 20px;
+    }
+
+    textarea {
+        /*display: block;*/
+        margin: auto;
+        border: 2px solid #ccc;
+        border-radius: 10px;
+        padding: 5px;
+        font-size: 20px;
+        resize: none;
+    }
+
+    input[type=checkbox] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 30px;
+        height: 30px;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        outline: none;
+        transition: all 0.3s ease-in-out;
+        vertical-align: middle;
+    }
+
+    input[type=checkbox]:checked {
+        background-color: #4CAF50;
+        border: none;
+    }
+
+    input[type=checkbox]:checked:after {
+        content: "\2714";
+        font-size: 25px;
+        color: white;
+        position: absolute;
+        top: 5px;
+        left: 8px;
+    }
+
+    label[for="checkbox"] {
+        display: inline-block;
+        vertical-align: middle;
+        font-size: 18px;
+    }
+
+    #error-list {
+        margin-top: 10px;
+    }
+
+    .error {
+        color: red;
+    }
+</style>
+<body>
+<form action="/" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" multiple>
+    <br>
+    <input type="checkbox" id="checkbox" name="checkbox" value="checkbox">
+
+    <label for="checkbox"> Only print here the prompt data, instead of downloading readded prompt</label><br>
+    <br>
+    <input type="submit" value="SUBMIT">
+</form>
+{% if errors %}
+<div id="error-list">
+    {% for error in errors %}
+    <p class="error">{{ error }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+<p> If you submit images with no metadata in transparency it will save the metadata in transparency</p>
+<p> If you submit images with metadata in transparency it will save the metadata in the regular png headers</p>
+
+{% for index, file in file_list %}
+<form>
+    <br>
+    <textarea id="content{{ index }}" name="content{{ index }}" style="width: 860px; height: 300px;">{{ file.text_content }}</textarea>
+    <br>
+    <label for="content{{ index }}">{{file.name}}</label>
+</form>
+{% endfor %}
+
+</body>
+</html>

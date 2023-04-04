@@ -156,7 +156,10 @@ def load():
                     if image.mode == "RGBA":
                         text_content = read_info_from_image_stealth(image)
                     else:
-                        text_content = image.text.get("parameters") or image.text
+                        if getattr(image, "text", None):
+                            text_content = image.text.get("parameters") or image.text
+                        else:
+                            text_content = "Metadata not found in alpha or pnginfo"
                     if isinstance(text_content, dict):
                         text_content = "\n\n".join(f"{key}:\n{value}" for key, value in text_content.items())
                     file_text_list.append(

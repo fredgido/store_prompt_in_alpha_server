@@ -24,9 +24,8 @@ def index():
 
 
 def read_info_from_image_stealth(image: PIL.Image) -> str:
-    if 'parameters' in image.text:
+    if "parameters" in image.text:
         return image.text["parameters"]
-
 
     # trying to read stealth pnginfo
     width, height = image.size
@@ -47,10 +46,7 @@ def read_info_from_image_stealth(image: PIL.Image) -> str:
             pixels[x, y] = (r, g, b, 0)
             if confirming_signature:
                 if index == len("stealth_pnginfo") * 8 - 1:
-                    if buffer == "".join(
-                        format(byte, "08b")
-                        for byte in "stealth_pnginfo".encode("utf-8")
-                    ):
+                    if buffer == "".join(format(byte, "08b") for byte in "stealth_pnginfo".encode("utf-8")):
                         confirming_signature = False
                         sig_confirmed = True
                         reading_param_len = True
@@ -82,9 +78,14 @@ def read_info_from_image_stealth(image: PIL.Image) -> str:
 
     if sig_confirmed and binary_data != "":
         # Convert binary string to UTF-8 encoded text
-        return bytearray(
-            int(binary_data[i : i + 8], 2) for i in range(0, len(binary_data), 8)
-        ).decode("utf-8", errors="ignore")
+        result = bytearray(int(binary_data[i : i + 8], 2) for i in range(0, len(binary_data), 8)).decode(
+            "utf-8", errors="ignore"
+        )
+
+        if result.startswith("{") and result.endswith("}"):
+            result = json.loads(result)
+        return result
+
     return ""
 
 
@@ -95,17 +96,16 @@ def add_stealth_pnginfo(image: PIL.Image) -> PIL.Image:
     pixels = image.load()
     str_parameters = image.text.get("parameters")
     if not str_parameters:
-        return None
+        if "prompt" in image.text and "workflow" in image.text:
+            str_parameters = json.dumps(image.text)
+        else:
+            return None
     # prepend signature
     signature_str = "stealth_pnginfo"
 
-    binary_signature = "".join(
-        format(byte, "08b") for byte in signature_str.encode("utf-8")
-    )
+    binary_signature = "".join(format(byte, "08b") for byte in signature_str.encode("utf-8"))
 
-    binary_param = "".join(
-        format(byte, "08b") for byte in str_parameters.encode("utf-8")
-    )
+    binary_param = "".join(format(byte, "08b") for byte in str_parameters.encode("utf-8"))
 
     # prepend length of parameters, padded to 32 digits
     param_len = len(binary_param)
@@ -143,14 +143,12 @@ def send_pillow_image_file(file, image):
 
 @app.route("/", methods=["POST"])
 def load():
-    files: list[FileStorage] = request.files.getlist("file")
+    files: list[FileStorage] = request.files.getlist("files")
 
     file_text_list = []
     with tempfile.TemporaryDirectory() as tmp_dir:
         zip_file_path = os.path.join(tmp_dir, f"{uuid.uuid4()}.zip")
-        with zipfile.ZipFile(
-            zip_file_path, "w", compression=zipfile.ZIP_STORED
-        ) as zip_file:
+        with zipfile.ZipFile(zip_file_path, "w", compression=zipfile.ZIP_STORED) as zip_file:
             for file in files:
                 image = PIL.Image.open(file)
 
@@ -165,18 +163,26 @@ def load():
                         continue
 
                 if image.mode == "RGBA":
-                    image.text["parameters"] = read_info_from_image_stealth(image)
+                    new_metadata = read_info_from_image_stealth(image)
+                    if isinstance(new_metadata, dict):
+                        for key, value in new_metadata.items():
+                            image.text[key] = value
+                    else:
+                        image.text["parameters"] = new_metadata
 
-                    if len(files) == 1:
-                        if request.form.get("checkbox"):
+                    if request.form.get("checkbox"):
+                        if isinstance(new_metadata, dict):
+                            new_metadata = "\n\n".join(f"{key}:\n{value}" for key, value in new_metadata.items())
 
-                            file_text_list.append(
-                                dict(
-                                    text_content=image.text["parameters"],
-                                    name=file.filename,
-                                )
+                        file_text_list.append(
+                            dict(
+                                text_content=new_metadata,
+                                name=file.filename,
                             )
-                            continue
+                        )
+                        continue
+                    if len(files) == 1:
+                        return send_pillow_image_file(file, image)
                     else:
                         buffer = io.BytesIO()
                         image.save(buffer, format="PNG", optimize=False)
@@ -190,16 +196,12 @@ def load():
                     if not image:
                         return render_template(
                             "index.html",
-                            errors=[
-                                f"ERROR one of the images was missing metadata {file.filename}"
-                            ],
+                            errors=[f"ERROR one of the images was missing metadata {file.filename}"],
                         )
                     if not image.text:
                         return render_template(
                             "index.html",
-                            errors=[
-                                f"Failed to get original text from {file.filename}."
-                            ],
+                            errors=[f"Failed to get original text from {file.filename}."],
                         )
                     if len(files) == 1:
                         return send_pillow_image_file(file, image)

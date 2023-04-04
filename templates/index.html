@@ -33,23 +33,38 @@
     }
 
     input[type=file] {
-        background-color: #3f4058;
-        border: 2px solid #51526f;
-        border-radius: 10px;
-        padding-top: 20px;
-        padding-left: 20px;
-        padding-right: 50px;
-        padding-bottom: 100px;
-        font-size: 20px;
-        margin: 20px;
+        opacity: 0;
+        z-index: 1;
+        height: 100px;
+        max-width: 28rem;
+        width: 100%;
+        position: relative;
+        cursor: pointer;
     }
 
-    input[type=file]:hover {
+    label#files:hover {
         border-color: #9192a7;
+    }
+    label#files {
+        background-color: #3f4058;
+        border-radius: .5rem;
+        height: 100px;
+        max-width: 28rem;
+        width: 100%;
+        transition: .3s;
+        border: 2px solid #51526f;
+        position: relative;
+        display: flex;
     }
 
     span#file-label {
-        transform: translateY(-5em) scale(1.5);
+        z-index: 0;
+        text-align: center;
+        max-width: 28rem;
+        width: 100%;
+        position: absolute;
+        top: 40px;
+        font-size: 20px;
     }
 
     input#checkbox {
@@ -114,9 +129,10 @@
 </style>
 <body>
 <form action="/" method="post" enctype="multipart/form-data">
-    <input type="file" name="files" multiple id="file-upload" required>
-    <span id="file-label">Click choose files or drag them here.</span>
-
+    <label for="files" id="files">
+        <input type="file" name="files" multiple id="file-upload" required>
+        <span id="file-label">Click choose files or drag them here.</span>
+    </label>
     <div class="print_metadata_checkbox">
         <input type="checkbox" id="checkbox" name="checkbox" value="checkbox">
         <label for="checkbox"> Only print here the metadata, instead of downloading readded prompt</label>

@@ -153,14 +153,19 @@ def load():
                 image = PIL.Image.open(file)
 
                 if request.form.get("checkbox"):
-                    if image.text.get("parameters"):
-                        file_text_list.append(
-                            dict(
-                                text_content=read_info_from_image_stealth(image),
-                                name=file.filename,
-                            )
+                    if image.mode == "RGBA":
+                        text_content = read_info_from_image_stealth(image)
+                    else:
+                        text_content = image.text.get("parameters") or image.text
+                    if isinstance(text_content, dict):
+                        text_content = "\n\n".join(f"{key}:\n{value}" for key, value in text_content.items())
+                    file_text_list.append(
+                        dict(
+                            text_content=text_content,
+                            name=file.filename,
                         )
-                        continue
+                    )
+                    continue
 
                 if image.mode == "RGBA":
                     new_metadata = read_info_from_image_stealth(image)

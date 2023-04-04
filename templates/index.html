@@ -12,6 +12,7 @@
         padding: 0;
         margin: 0;
     }
+
     body {
         background-color: #1e1e2c;
         display: flex;
@@ -23,32 +24,39 @@
         color: #d1d1da;
         font-size: 14px;
     }
+
     form {
         display: inherit;
         flex-direction: inherit;
         align-items: inherit;
         margin-top: 2rem;
     }
-    label.file {
+
+    input[type=file] {
         background-color: #3f4058;
-        border-radius: .5rem;
-        height: 100px;
-        max-width: 28rem;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: .3s;
         border: 2px solid #51526f;
+        border-radius: 10px;
+        padding-top: 20px;
+        padding-left: 20px;
+        padding-right: 50px;
+        padding-bottom: 100px;
+        font-size: 20px;
+        margin: 20px;
     }
-    label.file:hover {
+
+    input[type=file]:hover {
         border-color: #9192a7;
     }
+
+    span#file-label {
+        transform: translateY(-5em) scale(1.5);
+    }
+
     input#checkbox {
         margin-right: .25em;
         cursor: pointer;
     }
+
     textarea {
         width: 40rem;
         min-height: 5rem;
@@ -63,16 +71,20 @@
         resize: none;
         overflow: hidden;
     }
+
     textarea:focus {
         border-color: #ababbc;
     }
+
     div.output {
         margin: 15px 15px 0 15px;
         width: 40rem;
     }
+
     div.print_metadata_checkbox {
         margin: 10px;
     }
+
     input.submit {
         padding: 6px 25px;
         background-color: #3f4058;
@@ -82,16 +94,18 @@
         cursor: pointer;
         transition: .3s;
     }
+
     input.submit:hover {
         background-color: #5b5c79;
         border-color: #7f81aa;
     }
+
     span.hint {
         font-style: italic;
         font-size: .8em;
         color: #9192a7;
     }
-    
+
     @media screen and (max-width: 700px) {
         form, div.output, textarea {
             width: calc(100% - 30px);
@@ -100,10 +114,9 @@
 </style>
 <body>
 <form action="/" method="post" enctype="multipart/form-data">
-    <label for="file-upload" class="file">
-    <input type="file" name="file" multiple id="file-upload" style="display: none;" required>
-    <span>Click here to choose a file.</span>
-    </label>
+    <input type="file" name="files" multiple id="file-upload" required>
+    <span id="file-label">Click choose files or drag them here.</span>
+
     <div class="print_metadata_checkbox">
         <input type="checkbox" id="checkbox" name="checkbox" value="checkbox">
         <label for="checkbox"> Only print here the metadata, instead of downloading readded prompt</label>
@@ -113,28 +126,28 @@
     <span class="hint"> If you submit images with metadata in transparency it will save the metadata in the regular png headers</span>
 </form>
 {% if errors %}
-<div id="error-list">
-    {% for error in errors %}
-    <p class="error">{{ error }}</p>
-    {% endfor %}
-</div> 
+    <div id="error-list">
+        {% for error in errors %}
+            <p class="error">{{ error }}</p>
+        {% endfor %}
+    </div>
 {% endif %}
 
 
 {% for index, file in file_list %}
-<div class="output">
-    <textarea id="content{{ index }}" name="content{{ index }}">{{ file.text_content }}</textarea><br/>
-    <span class="hint">{{file.name}}</span>
-</div>
+    <div class="output">
+        <textarea id="content{{ index }}" name="content{{ index }}">{{ file.text_content }}</textarea><br/>
+        <span class="hint">{{ file.name }}</span>
+    </div>
 {% endfor %}
 <div style="height: 20px;"></div>
 <script>
-    window.addEventListener('load', (event) =>{
+    window.addEventListener('load', (event) => {
         var list = document.getElementsByTagName('textarea');
-            for (var i = 0; i < list.length; i++) {
-                list[i].style.height = "";
-                list[i].style.height = (list[i].scrollHeight)+"px";
-            }
+        for (var i = 0; i < list.length; i++) {
+            list[i].style.height = "";
+            list[i].style.height = (list[i].scrollHeight) + "px";
+        }
     });
 </script>
 </body>

@@ -1,0 +1,203 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+
+
+body {
+    background-color: #1e1e2c;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: sans-serif;
+    color: #d1d1da;
+    font-size: 14px;
+}
+
+form {
+    display: inherit;
+    flex-direction: inherit;
+    align-items: inherit;
+    margin-top: 2rem;
+}
+
+input[type=file] {
+    opacity: 0;
+    z-index: 1;
+    height: 120px;
+    max-width: 28rem;
+    width: 100%;
+    position: relative;
+    cursor: pointer;
+}
+
+input[type=text] {
+    width: 100%;
+    max-width: 25em;
+    text-align: center;
+    background-color: #3f4058;
+    border: 2px solid #777892;
+    color: #d1d1da;
+    height: 20px;
+    border-radius: .3rem;
+    outline: none;
+}
+
+label#files:hover, input[type=text]:focus {
+    border-color: #9192a7;
+    outline: none;
+}
+label#files {
+    background-color: #3f4058;
+    border-radius: .5rem .5rem 0 0;
+    height: 120px;
+    max-width: 28rem;
+    width: 100%;
+    transition: .3s;
+    border: 2px solid #3f4058;
+    position: relative;
+    display: flex;
+    box-sizing: border-box;
+}
+
+span#file-label {
+    font-size: 14px;
+}
+label#files>div {
+    z-index: 0;
+    text-align: center;
+    max-width: 28rem;
+    position: absolute;
+    top: 50px;
+    width: 100%;
+}
+label#files>div>span {
+    width: 100%;
+} 
+
+input#checkbox {
+    margin-right: .25em;
+    cursor: pointer;
+}
+
+textarea {
+    width: calc(100% - 20px);
+    min-height: 5rem;
+    font-size: 0.75rem;
+    background-color: #3f4058;
+    color: #d1d1da;
+    border-radius: .5rem;
+    border: 2px solid #9192a7;
+    outline: none;
+    padding: 10px;
+    transition: .3s;
+    resize: none;
+    overflow: hidden;
+}
+
+textarea:focus {
+    border-color: #ababbc;
+}
+
+div.output {
+    margin: 15px 15px 0 15px;
+    width: 40rem;
+}
+
+div.print_metadata_checkbox {
+    margin: 10px;
+}
+
+input.submit {
+    padding: 6px 25px;
+    background-color: #3f4058;
+    border: 1px solid #636479;
+    border-radius: .3rem;
+    color: inherit;
+    cursor: pointer;
+    transition: .3s;
+}
+
+input.submit:hover {
+    background-color: #5b5c79;
+    border-color: #7f81aa;
+}
+
+span.hint {
+    font-style: italic;
+    font-size: .8em;
+    color: #9192a7;
+}
+div.upload {
+    display: block;
+    background-color: #2c2d3f;
+    border-radius: .5rem;
+    max-width: 28rem;
+    width: 100%;
+    transition: .3s;
+    position: relative;
+}
+div.url {
+    border: 2px solid #3f4058;
+    border-top: none;
+    border-radius: 0 0 .5rem .5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+div.url>p {
+    margin: .9em 0 1em;
+}
+
+input[name=url] {
+    margin-bottom: 1.1em;
+}
+#filenames {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 20rem;
+    white-space: nowrap;
+}
+::placeholder { 
+color: #777892;
+opacity: 1; 
+}
+:-ms-input-placeholder { 
+color: #777892;
+}
+::-ms-input-placeholder {
+color: #777892;
+}
+
+a#copy {
+	background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3Csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 115.77 122.88' xml:space='preserve'%3E%3Cg%3E%3Cpath fill='%239192a7' class='st0' d='M89.62 13.96v7.73h12.19h0.01v0.02c3.85 0.01 7.34 1.57 9.86 4.1c2.5 2.51 4.06 5.98 4.07 9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01 3.84-1.57 7.33-4.1 9.86c-2.51 2.5-5.98 4.06-9.82 4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85 1.58-7.34 4.1-9.86c2.51-2.5 5.98-4.06 9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85 0.01 7.34 1.57 9.86 4.1c2.5 2.51 4.06 5.98 4.07 9.82h0.02V13.96L89.62 13.96z M79.04 21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91 0-1.75 0.39-2.37 1.01 c-0.61 0.61-1 1.46-1 2.37h0.02v0.01v64.59v0.02h-0.02c0 0.91 0.39 1.75 1.01 2.37c0.61 0.61 1.46 1 2.37 1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85 1.58-7.34 4.1-9.86c2.51-2.5 5.98-4.06 9.82-4.07v-0.02h0.02H79.04L79.04 21.69z M105.18 108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91 0-1.75 0.39-2.37 1.01 c-0.61 0.61-1 1.46-1 2.37h0.02v0.01v73.27v0.02h-0.02c0 0.91 0.39 1.75 1.01 2.37c0.61 0.61 1.46 1 2.37 1v-0.02h0.01h61.7h0.02 v0.02c0.91 0 1.75-0.39 2.37-1.01c0.61-0.61 1-1.46 1-2.37h-0.02V108.92L105.18 108.92z'/%3E%3C/g%3E%3C/svg%3E");
+
+    fill: currentColor;
+    background-size: cover;
+    height: 16px;
+    width: 15px;
+    display: block;
+    margin-right: 2px;
+}
+
+div.output>div {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2px;
+}
+span#filename {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 5rem);
+    white-space: nowrap;
+}
+
+@media screen and (max-width: 700px) {
+    form, div.output, textarea {
+        width: calc(100% - 30px);
+    }
+}

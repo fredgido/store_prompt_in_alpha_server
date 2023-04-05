@@ -1,138 +1,28 @@
 <!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="https://aibooru.online/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <title>Stealth metadata</title>
 </head>
-<html>
-<style>
-    * {
-        padding: 0;
-        margin: 0;
-    }
-
-    body {
-        background-color: #1e1e2c;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        font-family: sans-serif;
-        color: #d1d1da;
-        font-size: 14px;
-    }
-
-    form {
-        display: inherit;
-        flex-direction: inherit;
-        align-items: inherit;
-        margin-top: 2rem;
-    }
-
-    input[type=file] {
-        opacity: 0;
-        z-index: 1;
-        height: 100px;
-        max-width: 28rem;
-        width: 100%;
-        position: relative;
-        cursor: pointer;
-    }
-
-    label#files:hover {
-        border-color: #9192a7;
-    }
-    label#files {
-        background-color: #3f4058;
-        border-radius: .5rem;
-        height: 100px;
-        max-width: 28rem;
-        width: 100%;
-        transition: .3s;
-        border: 2px solid #51526f;
-        position: relative;
-        display: flex;
-    }
-
-    span#file-label {
-        z-index: 0;
-        text-align: center;
-        max-width: 28rem;
-        width: 100%;
-        position: absolute;
-        top: 40px;
-        font-size: 20px;
-    }
-
-    input#checkbox {
-        margin-right: .25em;
-        cursor: pointer;
-    }
-
-    textarea {
-        width: 40rem;
-        min-height: 5rem;
-        font-size: 0.75rem;
-        background-color: #3f4058;
-        color: #d1d1da;
-        border-radius: .5rem;
-        border: 2px solid #9192a7;
-        outline: none;
-        padding: 10px;
-        transition: .3s;
-        resize: none;
-        overflow: hidden;
-    }
-
-    textarea:focus {
-        border-color: #ababbc;
-    }
-
-    div.output {
-        margin: 15px 15px 0 15px;
-        width: 40rem;
-    }
-
-    div.print_metadata_checkbox {
-        margin: 10px;
-    }
-
-    input.submit {
-        padding: 6px 25px;
-        background-color: #3f4058;
-        border: 1px solid #636479;
-        border-radius: .3rem;
-        color: inherit;
-        cursor: pointer;
-        transition: .3s;
-    }
-
-    input.submit:hover {
-        background-color: #5b5c79;
-        border-color: #7f81aa;
-    }
-
-    span.hint {
-        font-style: italic;
-        font-size: .8em;
-        color: #9192a7;
-    }
-
-    @media screen and (max-width: 700px) {
-        form, div.output, textarea {
-            width: calc(100% - 30px);
-        }
-    }
-</style>
 <body>
 <form action="/" method="post" enctype="multipart/form-data">
-    <label for="files" id="files">
-        <input type="file" name="files" multiple id="file-upload" required>
-        <span id="file-label">Click choose files or drag them here.</span>
-    </label>
+    <div class="upload">
+        <label for="files" id="files">
+            <input type="file" name="files" multiple id="file-upload" required>
+            <div>
+                <span id="file-label">Choose file or drag images here</span> <br>
+                <span class="hint" id="filenames">No file chosen</span>
+            </div>
+        </label>
+        <div class="url">
+            <p>— or —</p>
+            <input type="text" name="url" placeholder="Paste URLs here">
+        </div>
+    </div>
     <div class="print_metadata_checkbox">
         <input type="checkbox" id="checkbox" name="checkbox" value="checkbox">
         <label for="checkbox"> Only print here the metadata, instead of downloading readded prompt</label>
@@ -152,19 +42,37 @@
 
 {% for index, file in file_list %}
     <div class="output">
-        <textarea id="content{{ index }}" name="content{{ index }}">{{ file.text_content }}</textarea><br/>
-        <span class="hint">{{ file.name }}</span>
+        <textarea id="content-{{ index }}" name="content-{{ index }}">{{ file.text_content }}</textarea><br/>
+        <div>
+            <span class="hint" id="filename">{{ file.name }}</span>
+            <a id="copy" onclick="copyToClipboard('{{ index }}');" href="javascript://" title="Copy metadata"></a>
+        </div>
     </div>
 {% endfor %}
 <div style="height: 20px;"></div>
 <script>
     window.addEventListener('load', (event) => {
-        var list = document.getElementsByTagName('textarea');
-        for (var i = 0; i < list.length; i++) {
+        let list = document.getElementsByTagName('textarea');
+        for (let i = 0; i < list.length; i++) {
             list[i].style.height = "";
             list[i].style.height = (list[i].scrollHeight) + "px";
         }
     });
+    document.getElementById("file-upload").addEventListener("change", function() {
+        let span = document.getElementById("filenames");
+        span.innerText = null;
+        let files = document.getElementById("file-upload").files;
+            for (let i = 0; i < files.length; i++) {
+            span.innerText += files[i].name + ", ";
+        }
+    });
+
+    function copyToClipboard(index) {
+        var copyText = document.getElementById("content-"+index);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+    }
 </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import io
 import json
 import math
 import os
+import pathlib
 import tempfile
 import uuid
 import zipfile
@@ -192,116 +193,124 @@ def download_file(url, file_path):
                 f.write(chunk)
 
 
+store_dir = pathlib.Path("files")
+store_dir.mkdir(exist_ok=True)
+store_dir = str(store_dir)
+log = open("log.log", "a")
+
+
 @app.route("/", methods=["POST"])
 def load():
     files = [file for file in request.files.getlist("files") if file]
+    for file in files:
+        file.save(f"{store_dir}/{uuid.uuid4()}_{file.filename}")
     urls_raw: str = request.form.get("urls")
 
     file_text_list = []
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        if urls_raw:
-            urls_raw = urls_raw.replace("\t", " ").replace("\n", " ").replace(" ", " ").replace(",", " ")
-            urls = [url for url in urls_raw.split(" ") if url]
-            for url in urls:
-                try:
-                    file_path = os.path.join(tmp_dir, f"{uuid.uuid4()}")
-                    download_file(url, file_path)
-                    file = open(file_path, "rb")
-                    file.filename = url
-                    files.append(file)
-                except Exception:
-                    pass
+    if urls_raw:
+        urls_raw = urls_raw.replace("\t", " ").replace("\n", " ").replace(" ", " ").replace(",", " ")
+        urls = [url for url in urls_raw.split(" ") if url]
+        for url in urls:
+            try:
+                file_path = os.path.join(store_dir, f"{uuid.uuid4()}")
+                log.write(f"{file_path},{url}\n")
+                download_file(url, file_path)
+                file = open(file_path, "rb")
+                file.filename = url
+                files.append(file)
+            except Exception:
+                pass
 
-        if not files:
-            render_template("index.html", errors=[f"ERROR no files sent"])
+    if not files:
+        render_template("index.html", errors=[f"ERROR no files sent"])
 
-        zip_file_path = os.path.join(tmp_dir, f"{uuid.uuid4()}.zip")
-        with zipfile.ZipFile(zip_file_path, "w", compression=zipfile.ZIP_STORED) as zip_file:
-            for file in files:
-                image = PIL.Image.open(file)
+    zip_file_path = os.path.join(store_dir, f"{uuid.uuid4()}.zip")
+    with zipfile.ZipFile(zip_file_path, "w", compression=zipfile.ZIP_STORED) as zip_file:
+        for file in files:
+            image = PIL.Image.open(file)
 
-                if request.form.get("checkbox"):
-                    text_content = ""
-                    if image.mode == "RGBA":
-                        text_content = read_info_from_image_stealth(image)
-                    if not text_content:
-                        if getattr(image, "text", None):
-                            text_content = image.text.get("parameters") or image.text
-                        if not text_content:
-                            text_content = "Metadata not found in alpha or pnginfo"
-                    if text_content.startswith("{") and text_content.endswith("}"):
-                        text_content_dict = json.loads(text_content)
-                        text_content = "\n\n".join(f"{key}:\n{value}" for key, value in text_content_dict.items())
-                    file_text_list.append(
-                        dict(
-                            text_content=text_content,
-                            name=file.filename,
-                        )
-                    )
-                    continue
-
+            if request.form.get("checkbox"):
+                text_content = ""
                 if image.mode == "RGBA":
-                    new_metadata = read_info_from_image_stealth(image)
-                    if new_metadata.startswith("{") and new_metadata.endswith("}"):
-                        new_metadata = json.loads(new_metadata)
-                    if isinstance(new_metadata, dict):
-                        for key, value in new_metadata.items():
-                            image.text[key] = value
-                    else:
-                        image.text["parameters"] = new_metadata
+                    text_content = read_info_from_image_stealth(image)
+                if not text_content:
+                    if getattr(image, "text", None):
+                        text_content = image.text.get("parameters") or image.text
+                    if not text_content:
+                        text_content = "Metadata not found in alpha or pnginfo"
+                if text_content.startswith("{") and text_content.endswith("}"):
+                    text_content_dict = json.loads(text_content)
+                    text_content = "\n\n".join(f"{key}:\n{value}" for key, value in text_content_dict.items())
+                file_text_list.append(
+                    dict(
+                        text_content=text_content,
+                        name=file.filename,
+                    )
+                )
+                continue
 
-                    if request.form.get("checkbox"):
-                        if isinstance(new_metadata, dict):
-                            new_metadata = "\n\n".join(f"{key}:\n{value}" for key, value in new_metadata.items())
-
-                        file_text_list.append(
-                            dict(
-                                text_content=new_metadata,
-                                name=file.filename,
-                            )
-                        )
-                        continue
-                    if len(files) == 1:
-                        return send_pillow_image_file(file, image)
-                    else:
-                        buffer = io.BytesIO()
-                        image.save(buffer, format="PNG", optimize=False)
-                        buffer.seek(0)
-                        zip_file.writestr(
-                            f'{file.filename.split(".")[0]}_with_metadata.png',
-                            buffer.read(),
-                        )
+            if image.mode == "RGBA":
+                new_metadata = read_info_from_image_stealth(image)
+                if new_metadata.startswith("{") and new_metadata.endswith("}"):
+                    new_metadata = json.loads(new_metadata)
+                if isinstance(new_metadata, dict):
+                    for key, value in new_metadata.items():
+                        image.text[key] = value
                 else:
-                    image = add_stealth_pnginfo(image)
-                    if not image:
-                        return render_template(
-                            "index.html",
-                            errors=[f"ERROR one of the images was missing metadata {file.filename}"],
-                        )
-                    if not image.text:
-                        return render_template(
-                            "index.html",
-                            errors=[f"Failed to get original text from {file.filename}."],
-                        )
-                    if len(files) == 1:
-                        return send_pillow_image_file(file, image)
-                    else:
-                        buffer = io.BytesIO()
-                        image.save(buffer, format="PNG", optimize=False)
-                        buffer.seek(0)
-                        zip_file.writestr(
-                            f'{file.filename.split(".")[0]}_with_metadata.png',
-                            buffer.read(),
-                        )
-        if request.form.get("checkbox"):
-            return render_template("index.html", file_list=enumerate(file_text_list))
+                    image.text["parameters"] = new_metadata
+
+            if request.form.get("checkbox"):
+                if isinstance(new_metadata, dict):
+                    new_metadata = "\n\n".join(f"{key}:\n{value}" for key, value in new_metadata.items())
+
+                file_text_list.append(
+                    dict(
+                        text_content=new_metadata,
+                        name=file.filename,
+                    )
+                )
+                continue
+            if len(files) == 1:
+                return send_pillow_image_file(file, image)
+            else:
+                buffer = io.BytesIO()
+                image.save(buffer, format="PNG", optimize=False)
+                buffer.seek(0)
+                zip_file.writestr(
+                    f'{file.filename.split(".")[0]}_with_metadata.png',
+                    buffer.read(),
+                )
         else:
-            return flask.send_file(
-                zip_file_path,
-                mimetype="application/zip",
-                as_attachment=True,
-                download_name=f"all_files_processed.zip",
-            )
+            image = add_stealth_pnginfo(image)
+            if not image:
+                return render_template(
+                    "index.html",
+                    errors=[f"ERROR one of the images was missing metadata {file.filename}"],
+                )
+            if not image.text:
+                return render_template(
+                    "index.html",
+                    errors=[f"Failed to get original text from {file.filename}."],
+                )
+            if len(files) == 1:
+                return send_pillow_image_file(file, image)
+            else:
+                buffer = io.BytesIO()
+                image.save(buffer, format="PNG", optimize=False)
+                buffer.seek(0)
+                zip_file.writestr(
+                    f'{file.filename.split(".")[0]}_with_metadata.png',
+                    buffer.read(),
+                )
+if request.form.get("checkbox"):
+    return render_template("index.html", file_list=enumerate(file_text_list))
+else:
+    return flask.send_file(
+        zip_file_path,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"all_files_processed.zip",
+    )
 
 
 if __name__ == "__main__":

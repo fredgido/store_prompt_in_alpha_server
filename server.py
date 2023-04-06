@@ -9,6 +9,7 @@ import zipfile
 
 import PIL.Image
 import flask
+import httpx
 from flask import Flask, request, render_template
 from werkzeug.datastructures import FileStorage
 
@@ -141,12 +142,36 @@ def send_pillow_image_file(file, image):
     )
 
 
+def download_file(url, file_path):
+    with httpx.stream("GET", url) as response:
+        with open(file_path, "wb") as f:
+            for chunk in response.iter_bytes(chunk_size=8192 * 16):
+                f.write(chunk)
+
+
 @app.route("/", methods=["POST"])
 def load():
-    files: list[FileStorage] = request.files.getlist("files")
+    files = [file for file in request.files.getlist("files") if file]
+    urls_raw: str = request.form.get("urls")
 
     file_text_list = []
     with tempfile.TemporaryDirectory() as tmp_dir:
+        if urls_raw:
+            urls_raw = urls_raw.replace("\t", " ").replace("\n", " ").replace(" ", " ").replace(",", " ")
+            urls = [url for url in urls_raw.split(" ") if url]
+            for url in urls:
+                try:
+                    file_path = os.path.join(tmp_dir, f"{uuid.uuid4()}")
+                    download_file(url, file_path)
+                    file = open(file_path, "rb")
+                    file.filename = url
+                    files.append(file)
+                except Exception:
+                    pass
+
+        if not files:
+            render_template("index.html", errors=[f"ERROR no files sent"])
+
         zip_file_path = os.path.join(tmp_dir, f"{uuid.uuid4()}.zip")
         with zipfile.ZipFile(zip_file_path, "w", compression=zipfile.ZIP_STORED) as zip_file:
             for file in files:

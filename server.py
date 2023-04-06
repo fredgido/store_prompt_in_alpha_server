@@ -95,9 +95,9 @@ def add_stealth_pnginfo(image: PIL.Image) -> PIL.Image:
     width, height = image.size
     image.putalpha(255)
     pixels = image.load()
-    str_parameters = image.text.get("parameters")
+    str_parameters = getattr(image, "text", None) and image.text.get("parameters")
     if not str_parameters:
-        if "prompt" in image.text and "workflow" in image.text:
+        if getattr(image, "text", None) and "prompt" in image.text and "workflow" in image.text:
             str_parameters = json.dumps(image.text)
         else:
             return None

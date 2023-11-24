@@ -146,6 +146,7 @@ div.url {
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-bottom: 15px;
 }
 div.url>p {
     margin: .9em 0 1em;

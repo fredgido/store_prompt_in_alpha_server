@@ -125,7 +125,7 @@ def read_info_from_image_stealth(image: PIL.Image) -> str:
             break
     if not sig_confirmed or binary_data == "":
         return ""
-        # Convert binary string to UTF-8 encoded text
+    # Convert binary string to UTF-8 encoded text
     byte_data = bytearray(int(binary_data[i:i + 8], 2) for i in range(0, len(binary_data), 8))
     try:
         decoded_data = gzip.decompress(bytes(byte_data)).decode('utf-8')
@@ -259,17 +259,17 @@ def load():
                 else:
                     image.text["parameters"] = new_metadata
 
-            if request.form.get("checkbox"):
-                if isinstance(new_metadata, dict):
-                    new_metadata = "\n\n".join(f"{key}:\n{value}" for key, value in new_metadata.items())
+                if request.form.get("checkbox"):
+                    if isinstance(new_metadata, dict):
+                        new_metadata = "\n\n".join(f"{key}:\n{value}" for key, value in new_metadata.items())
 
-                file_text_list.append(
-                    dict(
-                        text_content=new_metadata,
-                        name=file.filename,
+                    file_text_list.append(
+                        dict(
+                            text_content=new_metadata,
+                            name=file.filename,
+                        )
                     )
-                )
-                continue
+                    continue
             if len(files) == 1:
                 return send_pillow_image_file(file, image)
             else:
@@ -302,15 +302,15 @@ def load():
                     f'{file.filename.split(".")[0]}_with_metadata.png',
                     buffer.read(),
                 )
-if request.form.get("checkbox"):
-    return render_template("index.html", file_list=enumerate(file_text_list))
-else:
-    return flask.send_file(
-        zip_file_path,
-        mimetype="application/zip",
-        as_attachment=True,
-        download_name=f"all_files_processed.zip",
-    )
+    if request.form.get("checkbox"):
+        return render_template("index.html", file_list=enumerate(file_text_list))
+    else:
+        return flask.send_file(
+            zip_file_path,
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name=f"all_files_processed.zip",
+        )
 
 
 if __name__ == "__main__":

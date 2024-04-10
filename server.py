@@ -24,7 +24,6 @@ def index():
     return render_template("index.html")
 
 
-
 def read_info_from_image_stealth(image: PIL.Image) -> str:
     if "parameters" in image.text:
         return image.text["parameters"]
@@ -124,16 +123,13 @@ def read_info_from_image_stealth(image: PIL.Image) -> str:
         if read_end:
             break
     if not sig_confirmed or binary_data == "":
-        return "Metadata not found in alpha or pnginfo"
+        return ""
         # Convert binary string to UTF-8 encoded text
     byte_data = bytearray(int(binary_data[i:i + 8], 2) for i in range(0, len(binary_data), 8))
     try:
         decoded_data = gzip.decompress(bytes(byte_data)).decode('utf-8')
     except Exception:
         decoded_data = byte_data.decode('utf-8', errors='ignore')
-    if decoded_data.startswith("{") and decoded_data.endswith("}"):
-        decoded_data = json.loads(decoded_data)
-
     return decoded_data
 
 
@@ -228,13 +224,14 @@ def load():
                     text_content = ""
                     if image.mode == "RGBA":
                         text_content = read_info_from_image_stealth(image)
-                    if text_content is None or text_content == "":
+                    if not text_content:
                         if getattr(image, "text", None):
                             text_content = image.text.get("parameters") or image.text
-                        else:
+                        if not text_content:
                             text_content = "Metadata not found in alpha or pnginfo"
-                    if isinstance(text_content, dict):
-                        text_content = "\n\n".join(f"{key}:\n{value}" for key, value in text_content.items())
+                    if text_content.startswith("{") and text_content.endswith("}"):
+                        text_content_dict = json.loads(text_content)
+                        text_content = "\n\n".join(f"{key}:\n{value}" for key, value in text_content_dict.items())
                     file_text_list.append(
                         dict(
                             text_content=text_content,
@@ -245,6 +242,8 @@ def load():
 
                 if image.mode == "RGBA":
                     new_metadata = read_info_from_image_stealth(image)
+                    if new_metadata.startswith("{") and new_metadata.endswith("}"):
+                        new_metadata = json.loads(new_metadata)
                     if isinstance(new_metadata, dict):
                         for key, value in new_metadata.items():
                             image.text[key] = value

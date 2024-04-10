@@ -225,9 +225,10 @@ def load():
                 image = PIL.Image.open(file)
 
                 if request.form.get("checkbox"):
+                    text_content = ""
                     if image.mode == "RGBA":
                         text_content = read_info_from_image_stealth(image)
-                    else:
+                    if text_content is None or text_content == "":
                         if getattr(image, "text", None):
                             text_content = image.text.get("parameters") or image.text
                         else:

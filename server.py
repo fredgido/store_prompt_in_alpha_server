@@ -123,23 +123,18 @@ def read_info_from_image_stealth(image: PIL.Image) -> str:
                 break
         if read_end:
             break
-    if sig_confirmed and binary_data != '':
+    if not sig_confirmed or binary_data == "":
+        return "Metadata not found in alpha or pnginfo"
         # Convert binary string to UTF-8 encoded text
-        byte_data = bytearray(int(binary_data[i:i + 8], 2) for i in range(0, len(binary_data), 8))
-        try:
-            if compressed:
-                decoded_data = gzip.decompress(bytes(byte_data)).decode('utf-8')
-            else:
-                decoded_data = byte_data.decode('utf-8', errors='ignore')
-            geninfo = decoded_data
-        except:
-            pass
-    if geninfo.startswith("{") and geninfo.endswith("}"):
-            geninfo = json.loads(geninfo)
-    return geninfo
+    byte_data = bytearray(int(binary_data[i:i + 8], 2) for i in range(0, len(binary_data), 8))
+    try:
+        decoded_data = gzip.decompress(bytes(byte_data)).decode('utf-8')
+    except Exception:
+        decoded_data = byte_data.decode('utf-8', errors='ignore')
+    if decoded_data.startswith("{") and decoded_data.endswith("}"):
+        decoded_data = json.loads(decoded_data)
 
-
-
+    return decoded_data
 
 
 def add_stealth_pnginfo(image: PIL.Image) -> PIL.Image:
